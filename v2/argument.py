@@ -26,7 +26,7 @@ def get_args():
     parser.add_argument('--test_step', type=int, default=50, help='number of steps for a single epoch of test')
 
     #others
-    parser.add_argument('--render', type=bool, default=False, help='whether to render')
+    parser.add_argument('--render', type=bool, default=True, help='whether to render')
     parser.add_argument('--model_dir', type=str, default='./model', help='directory of model')
     parser.add_argument('--log_dir', type=str, default='./log', help='directory of log')
 

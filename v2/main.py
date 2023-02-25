@@ -12,6 +12,6 @@ if __name__ == '__main__':
         policy.test()
     else:
         max_cycles = args.num_step * (args.num_agent + args.num_adversary)
-        env = simple.env(max_cycles = max_cycles, continuous_actions = True).env.env
+        env = simple.env(max_cycles = max_cycles, continuous_actions = True, render_mode = 'rgb_array').env.env
         policy = maddpg.policy(env, args)
         policy.train()

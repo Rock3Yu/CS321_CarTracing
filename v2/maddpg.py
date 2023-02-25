@@ -52,10 +52,9 @@ class policy:
                 print(f'epoch {epoch + 1}')
                 self.env.reset()
             if self.args.render:
-                rgb_array = self.env.render('rgb_array')
+                rgb_array = self.env.render()
                 image = Image.fromarray(rgb_array)
                 image.save('./img_test.png')
-                exit()
             self.interact(step, reward_history, epoch)
             if step >= self.args.random_step and \
                 (step - self.args.random_step) % self.args.update_freq == 0:  #update network every update_freq
