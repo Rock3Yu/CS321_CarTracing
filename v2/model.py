@@ -11,6 +11,7 @@ class Actor(nn.Module):
         self.fc3 = nn.Linear(128, act_shape)
         self.relu = nn.ReLU()
         self.softmax = nn.Softmax(dim = 0)
+        self.sigmoid = nn.Sigmoid()
 
     def forward(self, obs): 
         obs = self.fc1(obs)
@@ -18,7 +19,7 @@ class Actor(nn.Module):
         obs = self.fc2(obs)
         obs = self.relu(obs)
         obs = self.fc3(obs)
-        return self.softmax(obs)
+        return self.sigmoid(obs)
 
 class Critic(nn.Module):
     def __init__(self, env):
@@ -29,7 +30,7 @@ class Critic(nn.Module):
             obs_shape = env.observation_spaces[name].shape[0]
             act_shape = env.action_spaces[name].shape[0]
             input_shape += obs_shape + act_shape
-        self.fc1 = nn.Linear(input_shape,128)
+        self.fc1 = nn.Linear(input_shape, 128)
         self.fc2 = nn.Linear(128, 128)
         self.fc3 = nn.Linear(128, 1)
         self.relu = nn.ReLU()
