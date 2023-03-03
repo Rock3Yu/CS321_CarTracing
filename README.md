@@ -5,6 +5,6 @@ git fetch
 
 git branch -a
 
-git push origin master:main
+git push origin master:cs326
 
-git pull origin main:master
+git pull origin cs326:master
