@@ -4,7 +4,7 @@ import torch
 
 def main():
     print(torch.Tensor(3))
-    print(np.ndarray((3, 5), dtype=np.float32))
+    print(np.arange(10)-1)
 
 
 if __name__ == "__main__":

@@ -12,3 +12,4 @@ git pull origin main:master
 
 scp maddpg@10.16.29.94:v1/yu/test.py D:\Downloads\SHARE
 
+tensorboard --logdir ./log/ --port 6789

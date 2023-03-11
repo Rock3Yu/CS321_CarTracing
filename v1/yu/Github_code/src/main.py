@@ -38,13 +38,13 @@ def main(args):
     os.makedirs(result_dir)
 
     env, dim_info = get_env(args.env_name, args.episode_length)
-    maddpg = MADDPG(dim_info, args.buffer_capacity, args.batch_size, args.actor_lr, args.critic_lr,
-                    result_dir)
+    maddpg = MADDPG(dim_info, args.buffer_capacity, args.batch_size, args.actor_lr, args.critic_lr, result_dir)
 
     step = 0  # global step counter
     agent_num = env.num_agents
     # reward of each episode of each agent
     episode_rewards = {agent_id: np.zeros(args.episode_num) for agent_id in env.agents}
+    
     for episode in range(args.episode_num):
         obs = env.reset()
         agent_reward = {agent_id: 0 for agent_id in env.agents}  # agent reward of the current episode
