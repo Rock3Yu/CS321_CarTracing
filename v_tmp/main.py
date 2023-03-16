@@ -1,8 +1,8 @@
 import pettingzoo.mpe.simple_v2 as simple
 import pettingzoo.mpe.simple_tag_v2 as tag
 import pettingzoo.mpe.simple_spread_v2 as spread
+from MADDPG import maddpg
 import argument
-import maddpg
 import os
 
 if __name__ == '__main__':
@@ -33,5 +33,5 @@ if __name__ == '__main__':
         env = spread.env(N=args.num_agent, local_ratio=args.local_ratio, max_cycles=max_cycles, 
                          continuous_actions=True, render_mode = args.render_mode).env.env
 
-    policy = maddpg.policy(env, args)
+    policy = maddpg(env, args)
     policy.run()

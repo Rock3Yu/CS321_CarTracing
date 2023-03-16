@@ -9,17 +9,17 @@ from memory import Memory
 import model
 from PIL import Image
 
-class policy:
+class maddpg:
     def __init__(self, env, args):
         self.env = env
         self.args = args
         self.cuda_avail = torch.cuda.is_available()
-        self.actor = dict()
-        self.actor_target = dict()
-        self.critic = dict()
-        self.critic_target = dict()
-        self.actor_optim = dict()
-        self.critic_optim = dict()
+        self.actor = {}
+        self.actor_target = {}
+        self.critic = {}
+        self.critic_target = {}
+        self.actor_optim = {}
+        self.critic_optim = {}
         for agent in env.world.agents:
             name = agent.name
             self.actor[name] = model.Actor(env, name)
@@ -38,8 +38,8 @@ class policy:
         self.memory = Memory(env, args)
         self.total_step = 0
         path = self.args.tensorboard_dir + \
-            (f'/test_{time.time()}' if self.args.test_mode \
-             else f'/train_epoch{self.args.num_epoch}_step{self.args.num_step}_{time.time()}')
+                (f'/test_{time.time()}' if self.args.test_mode \
+                 else f'/train_epoch{self.args.num_epoch}_step{self.args.num_step}_{time.time()}')
         if not os.path.exists(path): 
             os.makedirs(path)
         self.writer = SummaryWriter(path)
@@ -63,8 +63,8 @@ class policy:
                 if (epoch+1) % self.args.save_freq == 0:
                     self.save(epoch+1)
                 if (epoch+1) % self.args.test_freq == 0:
-                    rewards = dict()
-                    s_rewards = dict()
+                    rewards = {}
+                    s_rewards = {}
                     for te in range(self.args.test_epoch):
                         self.env.reset()
                         test_rewards, step_rewards = self.test(epoch+te)
@@ -86,7 +86,7 @@ class policy:
         self.writer.close()
     
     def train(self, epoch):
-        rewards = dict()
+        rewards = {}
         for step in range(self.args.num_step):
             if epoch % self.args.render_freq == 0:
                 self.render(epoch, step, 'train')
@@ -102,23 +102,15 @@ class policy:
 
     def test(self, epoch):
         FloatTensor = torch.cuda.FloatTensor if self.cuda_avail else torch.FloatTensor
-        rewards = dict()
-        step_rewards = dict()
+        rewards = {}
+        step_rewards = {}
         for step in range(self.args.num_step):
             if self.args.test_mode: self.render(epoch, step, 'test')
             with torch.no_grad():
                 for agent in self.env.world.agents:
                     name = agent.name
                     obs = torch.from_numpy(self.env.observe(agent.name)).type(FloatTensor)
-                    if self.args.env_name == 'simple':
-                        action = self.action_select('net', name, obs)
-                    elif self.args.env_name == 'tag':
-                        if not agent.adversary:
-                            action = self.action_select('net', name, obs)
-                        else:
-                            action = self.action_select('net', name, obs)
-                            # action = self.action_select('chase', obs=obs)
-                    elif self.args.env_name == 'spread':
+                    if self.args.env_name in ['simple', 'tag', 'spread']:
                         action = self.action_select('net', name, obs)
                     self.env.step(action)
                 for name in self.env.rewards:
@@ -129,7 +121,8 @@ class policy:
             if self.args.test_mode: 
                 self.writer.add_scalars('test-rew-by-step', self.env.rewards, self.total_step)
                 self.total_step += 1
-        for key in rewards: rewards[key] /= self.args.num_step
+        for value in rewards.values():
+            value /= self.args.num_step
         return rewards, step_rewards
 
     def interact(self, rewards):
@@ -174,8 +167,7 @@ class policy:
             action = obs[2:4] - obs[12:14]
             action /= max(abs(action))
             action = [0, -min(0, action[0]), max(0, action[0]), -min(0, action[1]), max(0, action[1])]
-            action = torch.tensor(action).type(FloatTensor)
-            return action
+            return torch.tensor(action).type(FloatTensor)  # action
         return torch.from_numpy(np.random.uniform(-1, 1, 5)).type(FloatTensor)
 
     def sample(self):
@@ -266,14 +258,26 @@ class policy:
     
     def load(self, epoch):
         for name in self.actor:
-            self.actor[name].load_state_dict(torch.load(self.args.model_dir+f'/{epoch}/actor/{name}'))
+            self.actor[name].load_state_dict(
+                torch.load(f'{self.args.model_dir}{epoch}/actor/{name}')
+            )
             self.actor_target[name].load_state_dict(self.actor[name].state_dict())
-            self.critic[name].load_state_dict(torch.load(self.args.model_dir+f'/{epoch}/critic/{name}'))
+            self.critic[name].load_state_dict(
+                torch.load(f'{self.args.model_dir}{epoch}/critic/{name}')
+            )
             self.critic_target[name].load_state_dict(self.critic[name].state_dict())
 
     def save(self, epoch):
-        if not os.path.exists(self.args.model_dir+f'/{epoch}/actor'): os.makedirs(self.args.model_dir+f'/{epoch}/actor')
-        if not os.path.exists(self.args.model_dir+f'/{epoch}/critic'): os.makedirs(self.args.model_dir+f'/{epoch}/critic')
+        if not os.path.exists(f'{self.args.model_dir}/{epoch}/actor'):
+            os.makedirs(f'{self.args.model_dir}/{epoch}/actor')
+        if not os.path.exists(f'{self.args.model_dir}/{epoch}/critic'):
+            os.makedirs(f'{self.args.model_dir}/{epoch}/critic')
         for name in self.actor:
-            torch.save(self.actor[name].state_dict(), self.args.model_dir+f'/{epoch}/actor/{name}')
-            torch.save(self.critic[name].state_dict(), self.args.model_dir+f'/{epoch}/critic/{name}')
+            torch.save(
+                self.actor[name].state_dict(),
+                f'{self.args.model_dir}/{epoch}/actor/{name}',
+            )
+            torch.save(
+                self.critic[name].state_dict(),
+                f'{self.args.model_dir}/{epoch}/critic/{name}',
+            )

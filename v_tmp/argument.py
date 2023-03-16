@@ -23,7 +23,7 @@ def get_args():
     parser.add_argument('--batch_size', type=int, default=64, help='size of training batch')
     parser.add_argument('--load', type=bool, default=False, help='whether to load model')
     parser.add_argument('--test_freq', type=int, default=100, help='# of epoches between each test')
-    parser.add_argument('--test_epoch', type=int, default=10, help='# of epoches of test')
+    parser.add_argument('--test_epoch', type=int, default=20, help='# of epoches of test')
     parser.add_argument('--save_freq', type=int, default=1000, help='# of epoches between each model save')
     parser.add_argument('--load_epoch', type=int, default=10000, help='load model name')
     parser.add_argument('--local_ratio', type=float, default=.7, help='ratio of local reward')
@@ -37,12 +37,11 @@ def get_args():
     parser.add_argument('--render_freq', type=int, default=1000, help='# of epoches between each render')
     #for unchange local ratio is l7
     #path
-    PATH_NAME = 'spread_unchange'
+    PATH_NAME = 'spread_l7'
     parser.add_argument('--overwrite', type=bool, default=False, help='file protection')
     parser.add_argument('--model_dir', type=str, default=f'./model/{PATH_NAME}', help='directory of model')
     parser.add_argument('--log_dir', type=str, default=f'./log/{PATH_NAME}', help='directory of log')
     parser.add_argument('--image_dir', type=str, default=f'./image/{PATH_NAME}', help='directory of render image')
     parser.add_argument('--tensorboard_dir', type=str, default=f'./log/tensorboard/{PATH_NAME}', help='directory of tensorboard log')
 
-    args = parser.parse_args()
-    return args
+    return parser.parse_args()
