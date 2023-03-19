@@ -76,7 +76,10 @@ class CarTracingScenario(BaseScenario):
         for i, escape_pos in enumerate(world.escape_pos):
             escape_pos.state.p_pos = np.array(world.default_escape_pos[i])
 
-    def observation(self, agent, world, rew):
+    def benchmark_data(self,agent,world):
+        return 0
+
+    def observation(self, agent, world):
         escape_pos = []
         for escape in world.escape_pos:
             escape_pos.append(escape.state.p_pos)
@@ -108,7 +111,11 @@ class CarTracingScenario(BaseScenario):
             obs.append(p[0])
             obs.append(p[1])
         result['obs']  = obs
-        result['rew']  = list(rew.values())
+        # result['rew']  = list(rew.values())
         result['name'] = agent.name
         result['map']  = world.map  #已经转化成ndarray:str
         return result
+    
+    def reward(self, agent, world):
+        
+        return 0

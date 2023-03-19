@@ -43,6 +43,8 @@ class policy:
         if not os.path.exists(path): 
             os.makedirs(path)
         self.writer = SummaryWriter(path)
+        with open(args.log_dir + '/benchmark.csv', 'w') as f:
+            if args.env_name == 'spread': f.write('epoch,step,agent,collision,min_distance,global_distance,occupy\n')
         self.start_time = time.time()
 
     def run(self):
@@ -52,6 +54,8 @@ class policy:
                 print(f'epoch {epoch + 1}')
                 self.env.reset()
                 rewards, _ = self.test(epoch)
+                for agent in self.env.world.agents:
+                    self.get_benchmark(epoch, self.args.num_step, agent)
                 self.writer.add_scalars('test-rew-by-epoch', rewards, epoch)
         else:
             if self.args.load:
@@ -60,6 +64,8 @@ class policy:
                 print(f'epoch {epoch + 1}')
                 self.env.reset()
                 self.train(epoch)
+                for agent in self.env.world.agents:
+                    self.get_benchmark(epoch, self.args.num_step, agent)
                 if (epoch+1) % self.args.save_freq == 0:
                     self.save(epoch+1)
                 if (epoch+1) % self.args.test_freq == 0:
@@ -90,6 +96,8 @@ class policy:
         for step in range(self.args.num_step):
             if epoch % self.args.render_freq == 0:
                 self.render(epoch, step, 'train')
+            for agent in self.env.world.agents:
+                self.get_benchmark(epoch, step, agent)
             self.interact(rewards)
             if self.total_step >= self.args.batch_size and \
                 (self.total_step - self.args.batch_size) % self.args.update_freq == 0:  #update network every update_freq
@@ -105,7 +113,10 @@ class policy:
         rewards = dict()
         step_rewards = dict()
         for step in range(self.args.num_step):
-            if self.args.test_mode: self.render(epoch, step, 'test')
+            if self.args.test_mode:
+                self.render(epoch, step, 'test')
+                for agent in self.env.world.agents:
+                    self.get_benchmark(epoch, step, agent)
             with torch.no_grad():
                 for agent in self.env.world.agents:
                     name = agent.name
@@ -246,6 +257,12 @@ class policy:
             for key in cur.keys():
                 tar[key] = self.args.tau * cur[key] + (1 - self.args.tau) * tar[key]
             self.actor_target[name].load_state_dict(tar)
+
+    def get_benchmark(self, epoch, step, agent):
+        if self.args.env_name == 'spread':
+            col, dist, glo, occu = self.env.scenario.benchmark_data(agent, self.env.world)
+            with open(self.args.log_dir + '/benchmark.csv', 'a') as f:
+                f.write(f'{epoch},{step},{agent.name},{col},{dist},{glo},{occu}\n')
 
     def render(self, epoch, step, mode):
         if self.args.render_mode is None: return

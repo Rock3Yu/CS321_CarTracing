@@ -18,7 +18,7 @@ def make_env(raw_env):
     return env
 
 class CarTracingEnv(AECEnv):
-    def __init__(self, scenario, world, max_cycles, ratio):
+    def __init__(self, scenario, world, max_cycles, render_mode, ratio=0.5):
         super().__init__()
 
         pygame.init()
@@ -46,8 +46,11 @@ class CarTracingEnv(AECEnv):
         self._agent_selector = agent_selector(self.agents)
 
         self.action_spaces = {}
+        self.observation_spaces = {}
         for agent in self.world.agents:
             self.action_spaces[agent.name] = spaces.Box(low = -1., high = 1., shape = (2,))
+            self.observation_spaces[agent.name] = spaces.Box(low = -np.inf, high = np.inf, shape = (0))
+            raise ValueError('shape of observation not calculated yet')
         
         self.steps = 0
 
@@ -55,6 +58,9 @@ class CarTracingEnv(AECEnv):
 
     def action_space(self, agent):
         return self.action_spaces[agent]
+    
+    def observation_space(self, agent):
+        return self.observation_spaces[agent]
 
     def observe(self, agent):
         return self.scenario.observation(

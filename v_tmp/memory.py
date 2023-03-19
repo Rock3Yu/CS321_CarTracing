@@ -3,23 +3,23 @@ import numpy as np
 class Memory:
     def __init__(self, env, args):
         self.size = args.memory_size
-        self.buffer = dict()
+        self.buffer = {}
         for agent in env.world.agents:
             name = agent.name
             obs_shape = env.observation_spaces[name].shape[0]
             act_shape = env.action_spaces[name].shape[0]
-            b = dict()
+            b = {}
             b['obs'] = np.empty((self.size, obs_shape), dtype=np.float32)
             b['action'] = np.empty((self.size, act_shape), dtype=np.float32)
             b['reward'] = np.empty(self.size, dtype=np.float32)
             b['obs_new'] = np.empty((self.size, obs_shape), dtype=np.float32)
             self.buffer[name] = b
-        self.temp = dict()
+        self.temp = {}
         self.cur_idx = 0
         self.total_cnt = 0
 
     def add(self, name, key, data):
-        if name not in self.temp: self.temp[name] = dict()
+        if name not in self.temp: self.temp[name] = {}
         self.temp[name][key] = data
     
     def submit(self):
@@ -33,10 +33,8 @@ class Memory:
 
     def sample(self, batch_size):
         idx = np.random.choice(min(self.total_cnt, self.size), size=batch_size, replace=False)
-        batch = dict()
+        batch = {}
         for name in self.buffer.keys():
-            buf = dict()
-            for key in self.buffer[name].keys():
-                buf[key] = self.buffer[name][key][idx]
-            batch[name] = buf
+            # buffer
+            batch[name] = {key: self.buffer[name][key][idx] for key in self.buffer[name].keys()}
         return batch

@@ -14,6 +14,7 @@ scp maddpg@10.16.29.94:v1/yu/test.py D:\Downloads\SHARE
 
 # to train a model
 You should carefully set the super paremeter before every experiment
+
 nohup python -u main.py --overwrite True >test.log 2>&1 & 
 
-tensorboard --logdir ./log/ --port 6789
+tensorboard --logdir ./log/tensorboard/spread_l4/ --port 6789

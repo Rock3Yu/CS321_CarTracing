@@ -29,15 +29,15 @@ def get_args():
     parser.add_argument('--local_ratio', type=float, default=.7, help='ratio of local reward')
 
     #testing
-    parser.add_argument('--test_mode', type=bool, default=False, help='whether to perform test')
+    parser.add_argument('--test_mode', type=bool, default=True, help='whether to perform test')
 
     #render
-    parser.add_argument('--render_mode', type=str, default='rgb_array', help='render mode, [human/rgb_array]')  #if not git then not output picture
+    parser.add_argument('--render_mode', type=str, default=None, help='render mode, [human/rgb_array]')  #if not git then not output picture
     parser.add_argument('--fps', type=int, default=10, help='fps for render')
     parser.add_argument('--render_freq', type=int, default=1000, help='# of epoches between each render')
     #for unchange local ratio is l7
     #path
-    PATH_NAME = 'spread_unchange'
+    PATH_NAME = 'spread_l7'
     parser.add_argument('--overwrite', type=bool, default=False, help='file protection')
     parser.add_argument('--model_dir', type=str, default=f'./model/{PATH_NAME}', help='directory of model')
     parser.add_argument('--log_dir', type=str, default=f'./log/{PATH_NAME}', help='directory of log')
