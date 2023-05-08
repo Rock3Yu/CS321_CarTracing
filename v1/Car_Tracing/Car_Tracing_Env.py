@@ -153,15 +153,22 @@ class CarTracingEnv(AECEnv):
     def _set_action(self, action, agent):
         agent.action.u = action
 
-    def enable_render(self):
-        if not self.renderOn:
+    def enable_render(self, mode='rgb_array'):
+        if not self.renderOn and mode == 'human':
             self.screen = pygame.display.set_mode(self.screen.get_size())
             self.renderOn = True
 
-    def render(self, mode):
-        self.enable_render()
-        self.draw()
-        pygame.display.flip()
+    def render(self, mode='rgb_array'):
+        self.enable_render(mode)
+        observation = np.array(pygame.surfarray.pixels3d(self.screen))
+        if mode == 'human':
+            self.draw()
+            pygame.display.flip()
+        return (
+            np.transpose(observation, axes=(1, 0, 2))
+            if self.render_mode == "rgb_array"
+            else None
+        )
 
     def draw(self):
         self.screen.fill((255, 255, 255))

@@ -95,3 +95,4 @@ class MLPNetwork(nn.Module):
 
     def forward(self, x):
         return self.net(x)
+#TODO:test new model on Algorithm.

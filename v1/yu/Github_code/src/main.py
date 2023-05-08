@@ -22,7 +22,8 @@ def get_env(env_name, ep_len=25):
     _dim_info = {}
     for agent_id in new_env.agents:
         _dim_info[agent_id] = []  # [obs_dim, act_dim]
-        _dim_info[agent_id].append(new_env.observation_space(agent_id).shape[0])
+        _dim_info[agent_id].append(
+            new_env.observation_space(agent_id).shape[0])
         _dim_info[agent_id].append(new_env.action_space(agent_id).n)
 
     return new_env, _dim_info
@@ -38,24 +39,29 @@ def main(args):
     os.makedirs(result_dir)
 
     env, dim_info = get_env(args.env_name, args.episode_length)
-    maddpg = MADDPG(dim_info, args.buffer_capacity, args.batch_size, args.actor_lr, args.critic_lr, result_dir)
+    maddpg = MADDPG(dim_info, args.buffer_capacity, args.batch_size,
+                    args.actor_lr, args.critic_lr, result_dir)
 
     step = 0  # global step counter
     agent_num = env.num_agents
     # reward of each episode of each agent
-    episode_rewards = {agent_id: np.zeros(args.episode_num) for agent_id in env.agents}
-    
+    episode_rewards = {agent_id: np.zeros(
+        args.episode_num) for agent_id in env.agents}
+
     for episode in range(args.episode_num):
         obs = env.reset()
-        agent_reward = {agent_id: 0 for agent_id in env.agents}  # agent reward of the current episode
+        # agent reward of the current episode
+        agent_reward = {agent_id: 0 for agent_id in env.agents}
         while env.agents:  # interact with the env for an episode
             step += 1
             if step < args.random_steps:
-                action = {agent_id: env.action_space(agent_id).sample() for agent_id in env.agents}
+                action = {agent_id: env.action_space(
+                    agent_id).sample() for agent_id in env.agents}
             else:
                 action = maddpg.select_action(obs)
 
-            next_obs, reward, done, info = env.step(action)
+            # observations, rewards, terminations, truncations, infos
+            next_obs, reward, done, _, info = env.step(action)
             # env.render()
             maddpg.add(obs, action, reward, next_obs, done)
 
@@ -112,16 +118,24 @@ if __name__ == '__main__':
                         choices=['simple_adversary_v2', 'simple_spread_v2', 'simple_tag_v2'])
     parser.add_argument('--episode_num', type=int, default=30000,
                         help='total episode num during training procedure')
-    parser.add_argument('--episode_length', type=int, default=25, help='steps per episode')
-    parser.add_argument('--learn_interval', type=int, default=100, help='steps interval between learning time')
+    parser.add_argument('--episode_length', type=int,
+                        default=25, help='steps per episode')
+    parser.add_argument('--learn_interval', type=int, default=100,
+                        help='steps interval between learning time')
     parser.add_argument('--random_steps', type=int, default=int(5e4),
                         help='random steps before the agent start to learn')  # first 50000 steps random
-    parser.add_argument('--tau', type=float, default=0.02, help='soft update parameter')
-    parser.add_argument('--gamma', type=float, default=0.95, help='discount factor')
-    parser.add_argument('--buffer_capacity', type=int, default=int(1e6), help='capacity of replay buffer')
-    parser.add_argument('--batch_size', type=int, default=1024, help='batch-size of replay buffer')
-    parser.add_argument('--actor_lr', type=float, default=0.01, help='learning rate of actor')
-    parser.add_argument('--critic_lr', type=float, default=0.01, help='learning rate of critic')
+    parser.add_argument('--tau', type=float, default=0.02,
+                        help='soft update parameter')
+    parser.add_argument('--gamma', type=float,
+                        default=0.95, help='discount factor')
+    parser.add_argument('--buffer_capacity', type=int,
+                        default=int(1e6), help='capacity of replay buffer')
+    parser.add_argument('--batch_size', type=int, default=1024,
+                        help='batch-size of replay buffer')
+    parser.add_argument('--actor_lr', type=float,
+                        default=0.01, help='learning rate of actor')
+    parser.add_argument('--critic_lr', type=float,
+                        default=0.01, help='learning rate of critic')
     args = parser.parse_args()
 
     main(args)

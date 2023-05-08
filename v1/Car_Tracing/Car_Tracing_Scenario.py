@@ -77,6 +77,9 @@ class CarTracingScenario(BaseScenario):
             escape_pos.state.p_pos = np.array(world.default_escape_pos[i])
 
     def benchmark_data(self,agent,world):
+        return
+    
+    def reward(self, agent, world):
         return 0
 
     def observation(self, agent, world):
@@ -116,6 +119,3 @@ class CarTracingScenario(BaseScenario):
         result['map']  = world.map  #已经转化成ndarray:str
         return result
     
-    def reward(self, agent, world):
-        
-        return 0

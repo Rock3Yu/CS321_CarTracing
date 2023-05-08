@@ -37,9 +37,12 @@ if __name__ == '__main__':
         frame_list = []  # used to save gif
         while env.agents:  # interact with the env for an episode
             actions = maddpg.select_action(states)
-            next_states, rewards, dones, infos = env.step(actions)
+            next_states, rewards, dones, _, infos = env.step(actions)
 
-            rend_result = env.render(mode='rgb_array')
+            # rend_result = env.render(mode='rgb_array')
+            rend_result = env.render()
+            print(rend_result)
+            exit()
             figure = Image.fromarray(rend_result)
 
             frame_list.append(figure)

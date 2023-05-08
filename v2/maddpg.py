@@ -230,6 +230,7 @@ class policy:
             Q_target = (torch.tensor(batch[name]['reward']).unsqueeze(1).type(FloatTensor) + self.args.gamma * Q_new).type(FloatTensor)
             Q = self.critic[name](obs, action).type(FloatTensor)
             loss_c = nn.MSELoss()(Q, Q_target).type(FloatTensor)
+            print(f'loss_c: {loss_c.item()}')
             self.critic_optim[name].zero_grad()
             loss_c.backward()
 
@@ -239,6 +240,7 @@ class policy:
                 self.actor[name](torch.tensor(batch[name]['obs']).type(FloatTensor))
             act_shape += self.env.action_spaces[name].shape[0]
             loss_a = -self.critic[name](obs, old_action).mean().type(FloatTensor)
+            print(f'loss_a: {loss_a.item()}')
             self.actor_optim[name].zero_grad()
             loss_a.backward()
 
