@@ -37,7 +37,7 @@ def get_args():
     parser.add_argument('--render_freq', type=int, default=100, help='# of epoches between each render')
 
     #path
-    PATH_NAME = 'test_seed'
+    PATH_NAME = 'test'
     parser.add_argument('--overwrite', type=bool, default=True, help='file protection')
     parser.add_argument('--model_dir', type=str, default=f'./model/{PATH_NAME}', help='directory of model')
     parser.add_argument('--log_dir', type=str, default=f'./log/{PATH_NAME}', help='directory of log')

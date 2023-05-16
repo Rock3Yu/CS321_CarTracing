@@ -68,15 +68,16 @@ class raw_env(SimpleEnv, EzPickle):
         max_cycles=25,
         continuous_actions=False,
         render_mode=None,
+        args=None
     ):
         EzPickle.__init__(
-            self, N, local_ratio, max_cycles, continuous_actions, render_mode
+            self, N, local_ratio, max_cycles, continuous_actions, render_mode,args
         )
         assert (
             0.0 <= local_ratio <= 1.0
         ), "local_ratio is a proportion. Must be between 0 and 1."
         scenario = Scenario()
-        world = scenario.make_world(N)
+        world = scenario.make_world(N,self)
         super().__init__(
             scenario=scenario,
             world=world,
@@ -84,6 +85,7 @@ class raw_env(SimpleEnv, EzPickle):
             max_cycles=max_cycles,
             continuous_actions=continuous_actions,
             local_ratio=local_ratio,
+            args=args
         )
         self.metadata["name"] = "simple_spread_v2"
 
@@ -93,7 +95,7 @@ parallel_env = parallel_wrapper_fn(env)
 
 
 class Scenario(BaseScenario):
-    def make_world(self, N=3):
+    def make_world(self, N=3,environment:SimpleEnv=None):
         world = World()
         # set any world properties first
         world.dim_c = 2
@@ -113,12 +115,13 @@ class Scenario(BaseScenario):
             landmark.name = "landmark %d" % i
             landmark.collide = False
             landmark.movable = False
+        self.env=environment
         return world
 
     def reset_world(self, world, np_random):
         # random properties for agents
         for i, agent in enumerate(world.agents):
-            agent.color = np.array([0.35, 0.35, 0.85])
+            agent.color = np.array([0.35, 0.85, 0.85])
         # random properties for landmarks
         for i, landmark in enumerate(world.landmarks):
             landmark.color = np.array([0.25, 0.25, 0.25])
@@ -182,6 +185,7 @@ class Scenario(BaseScenario):
                 for a in world.agents
          ]
             rew -= min(dists)
+        
         return rew
 
     def observation(self, agent, world):
@@ -201,6 +205,9 @@ class Scenario(BaseScenario):
                 continue
             comm.append(other.state.c)
             other_pos.append(other.state.p_pos - agent.state.p_pos)
-        return np.concatenate(
-            [agent.state.p_vel] + [agent.state.p_pos] + entity_pos + other_pos + comm
-        )
+
+        image = self.env.render()
+        # return np.concatenate([agent.state.p_vel] + [agent.state.p_pos] + entity_pos + other_pos + comm)
+        return np.array([np.concatenate(
+                [agent.state.p_vel] + [agent.state.p_pos] + entity_pos + other_pos + comm
+            ),image],dtype=object)

@@ -1,15 +1,17 @@
 import os
+import shutil
 
 import gymnasium
 import numpy as np
 import pygame
 from gymnasium import spaces
 from gymnasium.utils import seeding
-
 from pettingzoo import AECEnv
 from pettingzoo.mpe._mpe_utils.core import Agent
 from pettingzoo.utils import wrappers
 from pettingzoo.utils.agent_selector import agent_selector
+
+from PIL import Image
 
 alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
@@ -42,6 +44,7 @@ class SimpleEnv(AECEnv):
         render_mode=None,
         continuous_actions=False,
         local_ratio=None,
+        args=None
     ):
         super().__init__()
 
@@ -93,8 +96,11 @@ class SimpleEnv(AECEnv):
                     space_dim += self.world.dim_c
                 else:
                     space_dim *= self.world.dim_c
-
-            obs_dim = len(self.scenario.observation(agent, self.world))
+            if len(self.scenario.observation(agent, self.world)) == 2:
+                obs_dim = len(self.scenario.observation(agent, self.world)[0])
+            else:
+                obs_dim = len(self.scenario.observation(agent, self.world))
+            # print(space_dim,obs_dim)
             state_dim += obs_dim
             if self.continuous_actions:
                 self.action_spaces[agent.name] = spaces.Box(
@@ -117,6 +123,8 @@ class SimpleEnv(AECEnv):
         )
 
         self.steps = 0
+        self.epoch = 0
+        self.args = args
 
         self.current_actions = [None] * self.num_agents
 
@@ -132,7 +140,7 @@ class SimpleEnv(AECEnv):
     def observe(self, agent):
         return self.scenario.observation(
             self.world.agents[self._index_map[agent]], self.world
-        ).astype(np.float32)
+        )
 
     def state(self):
         states = tuple(
@@ -144,8 +152,8 @@ class SimpleEnv(AECEnv):
         return np.concatenate(states, axis=None)
 
     def reset(self, seed=None, return_info=False, options=None):
-        if seed is not None:
-            self.seed(seed=seed)
+        if self.args.seed is not None:
+            self.seed(self.args.seed)
         self.scenario.reset_world(self.world, self.np_random)
 
         self.agents = self.possible_agents[:]
@@ -175,7 +183,8 @@ class SimpleEnv(AECEnv):
                     action //= mdim
             if not agent.silent:
                 scenario_action.append(action)
-            self._set_action(scenario_action, agent, self.action_spaces[agent.name])
+            self._set_action(scenario_action, agent,
+                             self.action_spaces[agent.name])
 
         self.world.step()
 
@@ -193,7 +202,7 @@ class SimpleEnv(AECEnv):
             else:
                 reward = agent_reward
 
-            self.rewards[agent.name] = reward
+            self.rewards[agent.name] = reward+3
 
     # set env action for a particular agent
     def _set_action(self, action, agent, action_space, time=None):
@@ -240,6 +249,8 @@ class SimpleEnv(AECEnv):
         ):
             self._was_dead_step(action)
             return
+        if self.steps == self.max_cycles-1:
+            self.epoch += 1
         # print(self.terminations,self.truncations)
         cur_agent = self.agent_selection
         current_idx = self._index_map[self.agent_selection]
@@ -262,6 +273,28 @@ class SimpleEnv(AECEnv):
 
         if self.render_mode == "human":
             self.render()
+        self.save_gif()
+
+    def save_gif(self,):
+        if self.render_mode == 'rgb_array' and (self.epoch) % self.args.render_freq == 1:
+            rgb_array = self.render()
+            # image = Image.fromarray(np.transpose(rgb_array, (1, 2, 0)))
+            image = Image.fromarray(rgb_array[0], mode='L')
+            path_tmp = f'{self.args.image_dir}/temp'
+            if not os.path.exists(path_tmp):
+                os.makedirs(path_tmp)
+            image.save(os.path.join(path_tmp, f'img_{self.epoch}_{self.steps}.png'))
+
+            if self.steps == self.max_cycles-1:
+                frames = [
+                    Image.open(os.path.join(path_tmp, f'img_{self.epoch}_{i+1}.png'))
+                    for i in range(self.args.num_step-1)
+                ]
+                frames[0].save(f'{self.args.image_dir}/'
+                               + ('test' if self.args.test_mode else 'train')
+                               + f'_gif_{self.epoch}.gif', save_all=True,
+                               append_images=frames[1:], duration=1000/self.args.fps)
+                shutil.rmtree(path_tmp)
 
     def enable_render(self, mode="human"):
         if not self.renderOn and mode == "human":
@@ -279,10 +312,15 @@ class SimpleEnv(AECEnv):
 
         self.draw()
         observation = np.array(pygame.surfarray.pixels3d(self.screen))
+        observation = Image.fromarray(observation)
+        observation = observation.convert('L')
+        observation = np.array(observation)
+        observation = observation[np.newaxis, :]
         if self.render_mode == "human":
             pygame.display.flip()
         return (
-            np.transpose(observation, axes=(2, 1, 0))
+            # np.transpose(observation, axes=(2, 1, 0))
+            observation
             if self.render_mode == "rgb_array"
             else None
         )
@@ -310,7 +348,8 @@ class SimpleEnv(AECEnv):
             x += self.width // 2
             y += self.height // 2
             pygame.draw.circle(
-                self.screen, entity.color * 200, (x, y), entity.size * 350 * 57/700
+                self.screen, entity.color *
+                200, (x, y), entity.size * 350 * 57/700
             )  # 350 is an arbitrary scale factor to get pygame to render similar sizes as pyglet
             # pygame.draw.circle(
             #     self.screen, (0, 0, 0), (x, y), entity.size * 350 * 57/700, 1
@@ -327,14 +366,17 @@ class SimpleEnv(AECEnv):
                     word = "_"
                 elif self.continuous_actions:
                     word = (
-                        "[" + ",".join([f"{comm:.2f}" for comm in entity.state.c]) + "]"
+                        "[" +
+                        ",".join(
+                            [f"{comm:.2f}" for comm in entity.state.c]) + "]"
                     )
                 else:
                     word = alphabet[np.argmax(entity.state.c)]
 
                 message = entity.name + " sends " + word + "   "
                 message_x_pos = self.width * 0.05
-                message_y_pos = self.height * 0.95 - (self.height * 0.05 * text_line)
+                message_y_pos = self.height * 0.95 - \
+                    (self.height * 0.05 * text_line)
                 # self.game_font.render_to(
                 #     self.screen, (message_x_pos, message_y_pos), message, (0, 0, 0)
                 # )

@@ -5,10 +5,10 @@ def get_args():
 
     #environment
     parser.add_argument('--num_agent', type=int, default=1, help='number of agents')
-    parser.add_argument('--seed', type=int, default=None, help='seeding')
+    parser.add_argument('--seed', type=int, default=70, help='seeding')
     #seed =1233
     #training
-    parser.add_argument('--num_epoch', type=int, default=int(2e3), help='# of epoches')
+    parser.add_argument('--num_epoch', type=int, default=int(1e5), help='# of epoches')
     parser.add_argument('--num_step', type=int, default=25, help='# of steps for a single epoch')
     parser.add_argument('--lr_a', type=float, default=1e-3, help='learning rate of actor')
     parser.add_argument('--lr_c', type=float, default=1e-2, help='learning rate of critic')
@@ -16,7 +16,7 @@ def get_args():
     parser.add_argument('--tau', type=float, default=.01, help='soft update factor')
     parser.add_argument('--noise', type=float, default=.3, help='rate of noise')
     parser.add_argument('--decay', type=float, default=.99, help='rate of noise decay')
-    parser.add_argument('--explore_epoch', type=int, default=200, help='# of epoches for exploration')
+    parser.add_argument('--explore_epoch', type=int, default=1500, help='# of epoches for exploration')
     parser.add_argument('--update_freq', type=int, default=1, help='# of steps between each update')
     parser.add_argument('--memory_size', type=int, default=int(1e4), help='size of memory buffer')
     parser.add_argument('--batch_size', type=int, default=64, help='size of training batch')
@@ -34,10 +34,10 @@ def get_args():
     #render
     parser.add_argument('--render_mode', type=str, default='rgb_array', help='render mode, [human/rgb_array]')
     parser.add_argument('--fps', type=int, default=10, help='fps for render')
-    parser.add_argument('--render_freq', type=int, default=100, help='# of epoches between each render')
+    parser.add_argument('--render_freq', type=int, default=500, help='# of epoches between each render')
 
     #path
-    PATH_NAME = 'test_1'
+    PATH_NAME = 'gray_explore=1500_epoch_1e5_rewa3_seed'
     parser.add_argument('--overwrite', type=bool, default=True, help='file protection')
     parser.add_argument('--model_dir', type=str, default=f'./model/{PATH_NAME}', help='directory of model')
     parser.add_argument('--log_dir', type=str, default=f'./log/{PATH_NAME}', help='directory of log')
